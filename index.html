@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clothing Size Predictor | Prediksi Ukuran Pakaian dengan AI</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          sans-serif;
+        background: #f8f9fc;
+        color: #1e293b;
+        min-height: 100vh;
+      }
+
+      /* Hero */
+      .hero {
+        background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+        border-bottom: 1px solid #e2e8f0;
+        padding: 2rem 1.5rem 1.5rem;
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.3px;
+      }
+      .hero p {
+        font-size: 14px;
+        color: #475569;
+        max-width: 540px;
+        margin: 0 auto;
+      }
+      .badge-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 4px 12px;
+        border-radius: 99px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .b-purple {
+        background: #e9e8fe;
+        color: #3b34a3;
+        border: 1px solid #c7c4f0;
+      }
+      .b-teal {
+        background: #dff5ed;
+        color: #0c6e58;
+        border: 1px solid #a8e0cf;
+      }
+      .b-amber {
+        background: #fff0e0;
+        color: #b45309;
+        border: 1px solid #fed7aa;
+      }
+
+      /* Main layout */
+      .main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.8rem;
+        padding: 1.8rem;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      @media (max-width: 650px) {
+        .main {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+      }
+
+      /* Cards */
+      .card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.4rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        transition: all 0.2s;
+      }
+      .card-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #0f172a;
+      }
+      .card-title i {
+        font-size: 18px;
+        color: #534ab7;
+      }
+
+      /* Form */
+      .field {
+        margin-bottom: 1.2rem;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: #334155;
+        margin-bottom: 0.4rem;
+      }
+      .field input {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        font-size: 14px;
+        background: #fff;
+        transition: all 0.2s;
+      }
+      .field input:focus {
+        outline: none;
+        border-color: #534ab7;
+        box-shadow: 0 0 0 2px rgba(83, 74, 183, 0.2);
+      }
+      .slider-row {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .slider-row input[type="range"] {
+        flex: 1;
+        height: 4px;
+        border-radius: 99px;
+      }
+      .slider-val {
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 58px;
+        text-align: right;
+      }
+
+      /* Buttons */
+      .btn-primary {
+        width: 100%;
+        padding: 0.7rem;
+        background: #534ab7;
+        color: white;
+        border: none;
+        border-radius: 40px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .btn-primary:hover {
+        background: #4338a6;
+        transform: scale(0.98);
+      }
+      .btn-outline {
+        width: 100%;
+        padding: 0.6rem;
+        background: transparent;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        border-radius: 40px;
+        font-size: 13px;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition: 0.2s;
+      }
+      .btn-outline:hover {
+        background: #f1f5f9;
+      }
+
+      /* API config */
+      .api-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .api-row input {
+        flex: 1;
+      }
+      .api-status {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 99px;
+        margin-top: 0.5rem;
+        display: inline-block;
+      }
+      .status-ok {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+      .status-err {
+        background: #ffe4e2;
+        color: #b91c1c;
+      }
+      .status-wait {
+        background: #fff3e3;
+        color: #b45309;
+      }
+
+      /* Result area */
+      .result-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #64748b;
+      }
+      .size-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #f1f0ff;
+        color: #534ab7;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+      }
+      .size-label {
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .conf-bar-wrap {
+        margin: 1rem 0;
+      }
+      .conf-bar-bg {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 99px;
+      }
+      .conf-bar-fill {
+        height: 8px;
+        background: #534ab7;
+        border-radius: 99px;
+        transition: width 0.5s;
+      }
+
+      /* Prob bars */
+      .prob-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.5rem;
+      }
+      .prob-label {
+        font-size: 12px;
+        font-weight: 500;
+        width: 36px;
+      }
+      .prob-bg {
+        flex: 1;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 99px;
+      }
+      .prob-fill {
+        height: 6px;
+        border-radius: 99px;
+      }
+      .prob-val {
+        font-size: 11px;
+        width: 40px;
+        text-align: right;
+      }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 1rem;
+      }
+      .tab {
+        padding: 6px 2px;
+        font-size: 13px;
+        cursor: pointer;
+        color: #64748b;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+      .tab.on {
+        color: #534ab7;
+        border-bottom-color: #534ab7;
+        font-weight: 600;
+      }
+
+      /* Code block */
+      pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 16px;
+        padding: 1rem;
+        font-size: 12px;
+        overflow-x: auto;
+        font-family: "SF Mono", monospace;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css"
+    />
+  </head>
+  <body>
+    <div class="hero">
+      <h1>
+        <i
+          class="ti ti-shirt"
+          style="
+            font-size: 26px;
+            vertical-align: -3px;
+            margin-right: 6px;
+            color: #534ab7;
+          "
+        ></i>
+        Clothing Size Predictor
+      </h1>
+      <p>
+        Prediksi ukuran pakaian (XXS–XXL) berdasarkan tinggi, berat, dan usia.
+        Model KNN dengan akurasi 98.57%
+      </p>
+      <div class="badge-row">
+        <span class="badge b-purple"><i class="ti ti-brain"></i> KNN K=11</span>
+        <span class="badge b-teal"
+          ><i class="ti ti-chart-line"></i> Akurasi 98.57%</span
+        >
+        <span class="badge b-amber"
+          ><i class="ti ti-database"></i> 119K dataset</span
+        >
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- Kiri: Input & konfigurasi -->
+      <div>
+        <div class="card" style="margin-bottom: 1.2rem">
+          <div class="card-title">
+            <i class="ti ti-server"></i> Konfigurasi API
+          </div>
+          <div class="field">
+            <label>URL API Endpoint</label>
+            <div class="api-row">
+              <input
+                type="text"
+                id="api-url"
+                value="http://localhost:8000"
+                placeholder="https://api-anda.onrender.com"
+              />
+              <button
+                class="btn-outline"
+                style="width: auto; padding: 0.4rem 0.9rem; margin-top: 0"
+                onclick="testConn()"
+              >
+                Test
+              </button>
+            </div>
+            <span class="api-status status-wait" id="api-status"
+              >⏳ Belum ditest</span
+            >
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <i class="ti ti-ruler"></i> Data Tubuh Anda
+          </div>
+          <div class="field">
+            <label>Tinggi (cm) · 140–210 cm</label>
+            <div class="slider-row">
+              <input
+                type="range"
+                id="height"
+                min="140"
+                max="210"
+                value="165"
+                step="1"
+                oninput="
+                  updateSlider('height', 'height-val', ' cm');
+                  calcBMI();
+                "
+              />
+              <span class="slider-val" id="height-val">165 cm</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Berat (kg) · 35–140 kg</label>
+            <div class="slider-row">
+              <input
+                type="range"
+                id="weight"
+                min="35"
+                max="140"
+                value="60"
+                step="1"
+                oninput="
+                  updateSlider('weight', 'weight-val', ' kg');
+                  calcBMI();
+                "
+              />
+              <span class="slider-val" id="weight-val">60 kg</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Usia (tahun) · 18–80 tahun</label>
+            <div class="slider-row">
+              <input
+                type="range"
+                id="age"
+                min="18"
+                max="80"
+                value="25"
+                step="1"
+                oninput="updateSlider('age', 'age-val', ' tahun')"
+              />
+              <span class="slider-val" id="age-val">25 tahun</span>
+            </div>
+          </div>
+          <div
+            style="
+              background: #f8fafc;
+              border-radius: 16px;
+              padding: 0.8rem;
+              margin-bottom: 1rem;
+            "
+          >
+            <div style="font-size: 12px; color: #475569">BMI Real-time</div>
+            <div style="display: flex; align-items: baseline; gap: 0.5rem">
+              <span style="font-size: 26px; font-weight: 700" id="bmi-val"
+                >22.0</span
+              >
+              <span style="font-size: 13px; color: #475569" id="bmi-cat"
+                >Normal</span
+              >
+            </div>
+          </div>
+          <button class="btn-primary" id="btn-predict" onclick="predict()">
+            <i class="ti ti-sparkles"></i> Prediksi Ukuran
+          </button>
+          <button class="btn-outline" onclick="resetForm()">Reset Form</button>
+          <div id="error-msg" style="display: none; margin-top: 12px"></div>
+        </div>
+      </div>
+
+      <!-- Kanan: Hasil & tab -->
+      <div>
+        <div class="card" style="margin-bottom: 1.2rem">
+          <div class="card-title">
+            <i class="ti ti-target"></i> Hasil Prediksi
+          </div>
+          <div id="result-area">
+            <div class="result-empty">
+              <i class="ti ti-shirt" style="font-size: 36px; opacity: 0.5"></i>
+              <div style="margin-top: 8px">Masukkan data dan klik Prediksi</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tabs">
+            <div class="tab on" id="tab-prob" onclick="switchTab('prob')">
+              📊 Probabilitas
+            </div>
+            <div class="tab" id="tab-analisis" onclick="switchTab('analisis')">
+              📈 Analisis BMI
+            </div>
+            <div class="tab" id="tab-history" onclick="switchTab('history')">
+              📜 Riwayat
+            </div>
+          </div>
+          <div id="panel-prob" style="min-height: 180px">
+            <div
+              style="
+                font-size: 13px;
+                color: #64748b;
+                text-align: center;
+                padding: 1rem;
+              "
+            >
+              Lakukan prediksi dulu
+            </div>
+          </div>
+          <div
+            id="panel-analisis"
+            style="display: none; min-height: 180px"
+          ></div>
+          <div
+            id="panel-history"
+            style="display: none; min-height: 180px"
+          ></div>
+          <button
+            class="btn-outline"
+            style="margin-top: 0.8rem"
+            onclick="clearHistory()"
+          >
+            Hapus riwayat
+          </button>
+        </div>
+      </div>
+
+      <!-- Fullwidth: cara integrasi -->
+      <div style="grid-column: 1/-1">
+        <div class="card">
+          <div class="card-title">
+            <i class="ti ti-code"></i> Cara integrasi ke website kamu
+          </div>
+          <div class="tabs" style="margin-bottom: 1rem">
+            <div class="tab on" id="ctab-js" onclick="switchCodeTab('js')">
+              JavaScript
+            </div>
+            <div class="tab" id="ctab-curl" onclick="switchCodeTab('curl')">
+              cURL
+            </div>
+          </div>
+          <div id="cpanel-js">
+            <pre>
+// Contoh fetch ke API
+async function cekUkuran(tinggiCm, beratKg, usiaTahun) {
+  const res = await fetch('https://api-anda.onrender.com/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ height: tinggiCm, weight: beratKg, age: usiaTahun })
+  });
+  const data = await res.json();
+  console.log(`Ukuran: ${data.predicted_size}, Confidence: ${data.confidence*100}%`);
+  return data;
+}
+// cekUkuran(165, 60, 25);</pre
+            >
+          </div>
+          <div id="cpanel-curl" style="display: none">
+            <pre>
+curl -X POST https://api-anda.onrender.com/predict \
+  -H "Content-Type: application/json" \
+  -d '{"height":165,"weight":60,"age":25}'</pre
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL"];
+      const SIZE_COLORS = {
+        XXS: "#9C6FE4",
+        XS: "#2196F3",
+        S: "#00BCD4",
+        M: "#4CAF50",
+        L: "#FF9800",
+        XL: "#F44336",
+        XXL: "#795548",
+      };
+      let history = [];
+
+      function updateSlider(id, valId, unit) {
+        document.getElementById(valId).innerText =
+          document.getElementById(id).value + unit;
+      }
+      function calcBMI() {
+        let h = +document.getElementById("height").value,
+          w = +document.getElementById("weight").value;
+        let bmi = (w / Math.pow(h / 100, 2)).toFixed(1);
+        let cat =
+          bmi < 18.5
+            ? "Kurus"
+            : bmi < 25
+              ? "Normal"
+              : bmi < 30
+                ? "Gemuk"
+                : "Obesitas";
+        document.getElementById("bmi-val").innerText = bmi;
+        document.getElementById("bmi-cat").innerText = cat;
+      }
+      async function testConn() {
+        let url = document.getElementById("api-url").value.trim();
+        let st = document.getElementById("api-status");
+        st.className = "api-status status-wait";
+        st.innerText = "⏳ Mengecek...";
+        try {
+          let res = await fetch(url + "/health", {
+            signal: AbortSignal.timeout(5000),
+          });
+          let json = await res.json();
+          if (json.status === "healthy") {
+            st.className = "api-status status-ok";
+            st.innerText = `✅ Terhubung | K=${json.model.k} | acc=${(json.model.accuracy * 100).toFixed(1)}%`;
+          } else throw new Error();
+        } catch (e) {
+          st.className = "api-status status-err";
+          st.innerText = "❌ Gagal hubungi API. Pastikan server berjalan.";
+        }
+      }
+      async function predict() {
+        let url = document.getElementById("api-url").value.trim();
+        let h = +document.getElementById("height").value;
+        let w = +document.getElementById("weight").value;
+        let a = +document.getElementById("age").value;
+        let btn = document.getElementById("btn-predict");
+        let errDiv = document.getElementById("error-msg");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid white;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:6px"></span>Memprediksi...';
+        errDiv.style.display = "none";
+        try {
+          let res = await fetch(url + "/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ height: h, weight: w, age: a }),
+            signal: AbortSignal.timeout(10000),
+          });
+          if (!res.ok) {
+            let err = await res.json();
+            throw new Error(err.detail || "Gagal prediksi");
+          }
+          let data = await res.json();
+          showResult(data, h, w, a);
+          addHistory(data, h, w, a);
+        } catch (e) {
+          errDiv.innerHTML = `<div style="background:#ffebe9;border:1px solid #ffb4a2;border-radius:16px;padding:12px;font-size:13px;color:#b91c1c"><strong>⚠️ Error:</strong> ${e.message.includes("fetch") ? "Tidak terhubung ke API. Cek URL atau jalankan backend." : e.message}</div>`;
+          errDiv.style.display = "block";
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ti ti-sparkles"></i> Prediksi Ukuran';
+        }
+      }
+      function showResult(data, h, w, age) {
+        let size = data.predicted_size;
+        let conf = data.confidence;
+        let probs = data.all_probabilities || {};
+        let bmi =
+          data.body_analysis?.bmi || (w / Math.pow(h / 100, 2)).toFixed(1);
+        let bmiCat = data.body_analysis?.bmi_category || "-";
+        let color = SIZE_COLORS[size] || "#534AB7";
+        document.getElementById("result-area").innerHTML = `
+    <div style="text-align:center">
+      <div class="size-badge" style="background:${color}20;color:${color}">${size}</div>
+      <div class="size-label">${size}</div>
+      <div style="font-size:13px;margin-bottom:8px">Rekomendasi ukuran pakaian</div>
+      <div class="conf-bar-wrap"><div class="conf-label" style="display:flex;justify-content:space-between;font-size:12px"><span>Keyakinan</span><span>${(conf * 100).toFixed(1)}%</span></div>
+      <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:${(conf * 100).toFixed(1)}%;background:${color}"></div></div></div>
+    </div>`;
+        let probHtml = SIZE_ORDER.map((sz) => {
+          let p = probs[sz] || 0;
+          let perc = (p * 100).toFixed(1);
+          let isSelected = sz === size;
+          return `<div class="prob-row"><span class="prob-label" style="${isSelected ? "color:" + color + ";font-weight:600" : ""}">${sz}</span><div class="prob-bg"><div class="prob-fill" style="width:${perc}%;background:${isSelected ? color : "#cbd5e1"}"></div></div><span class="prob-val">${perc}%</span></div>`;
+        }).join("");
+        document.getElementById("panel-prob").innerHTML = probHtml;
+        document.getElementById("panel-analisis").innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:#f8fafc;border-radius:16px;padding:10px"><div style="font-size:11px">BMI</div><div style="font-size:18px;font-weight:700">${typeof bmi === "number" ? bmi.toFixed(1) : bmi}</div></div>
+      <div style="background:#f8fafc;border-radius:16px;padding:10px"><div style="font-size:11px">Kategori</div><div style="font-size:18px;font-weight:700">${bmiCat}</div></div>
+      <div style="background:#f8fafc;border-radius:16px;padding:10px"><div style="font-size:11px">Tinggi / Berat</div><div style="font-size:15px">${h} cm / ${w} kg</div></div>
+      <div style="background:#f8fafc;border-radius:16px;padding:10px"><div style="font-size:11px">Usia</div><div style="font-size:15px">${age} thn · ${data.body_analysis?.age_group || "-"}</div></div>
+    </div>`;
+      }
+      function addHistory(data, h, w, age) {
+        history.unshift({
+          size: data.predicted_size,
+          conf: data.confidence,
+          h,
+          w,
+          age,
+          time: new Date().toLocaleTimeString(),
+        });
+        if (history.length > 10) history.pop();
+        renderHistory();
+      }
+      function renderHistory() {
+        let container = document.getElementById("history-list");
+        if (!container) return;
+        if (!history.length) {
+          container.innerHTML =
+            '<div style="text-align:center;padding:1rem;color:#64748b">Belum ada prediksi</div>';
+          return;
+        }
+        container.innerHTML = history
+          .map(
+            (item, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #e2e8f0;cursor:pointer" onclick="loadHistory(${i})">
+      <div style="width:36px;height:36px;background:${SIZE_COLORS[item.size]}20;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:${SIZE_COLORS[item.size]}">${item.size}</div>
+      <div style="flex:1"><div>${item.h}cm · ${item.w}kg · ${item.age}thn</div><div style="font-size:11px;color:#64748b">${(item.conf * 100).toFixed(0)}% · ${item.time}</div></div>
+      <i class="ti ti-chevron-right"></i>
+    </div>`,
+          )
+          .join("");
+      }
+      function loadHistory(idx) {
+        let item = history[idx];
+        document.getElementById("height").value = item.h;
+        document.getElementById("weight").value = item.w;
+        document.getElementById("age").value = item.age;
+        updateSlider("height", "height-val", " cm");
+        updateSlider("weight", "weight-val", " kg");
+        updateSlider("age", "age-val", " tahun");
+        calcBMI();
+      }
+      function clearHistory() {
+        history = [];
+        renderHistory();
+      }
+      function resetForm() {
+        document.getElementById("height").value = 165;
+        document.getElementById("weight").value = 60;
+        document.getElementById("age").value = 25;
+        updateSlider("height", "height-val", " cm");
+        updateSlider("weight", "weight-val", " kg");
+        updateSlider("age", "age-val", " tahun");
+        calcBMI();
+        document.getElementById("result-area").innerHTML =
+          `<div class="result-empty"><i class="ti ti-shirt" style="font-size:36px"></i><div>Isi data dan klik Prediksi</div></div>`;
+        document.getElementById("panel-prob").innerHTML =
+          '<div style="padding:1rem;text-align:center;color:#64748b">Lakukan prediksi dulu</div>';
+        document.getElementById("error-msg").style.display = "none";
+      }
+      function switchTab(tab) {
+        ["prob", "analisis", "history"].forEach((t) => {
+          document.getElementById(`tab-${t}`).classList.toggle("on", t === tab);
+          document.getElementById(`panel-${t}`).style.display =
+            t === tab ? "block" : "none";
+        });
+        if (tab === "history") {
+          if (!document.getElementById("history-list")) {
+            let panel = document.getElementById("panel-history");
+            panel.innerHTML = '<div id="history-list"></div>';
+            renderHistory();
+          } else renderHistory();
+        }
+      }
+      function switchCodeTab(tab) {
+        document.getElementById("ctab-js").classList.toggle("on", tab === "js");
+        document
+          .getElementById("ctab-curl")
+          .classList.toggle("on", tab === "curl");
+        document.getElementById("cpanel-js").style.display =
+          tab === "js" ? "block" : "none";
+        document.getElementById("cpanel-curl").style.display =
+          tab === "curl" ? "block" : "none";
+      }
+      // Init
+      calcBMI();
+      renderHistory = renderHistory.bind(this);
+      document.getElementById("panel-history").innerHTML =
+        '<div id="history-list"></div>';
+      renderHistory();
+    </script>
+    <style>
+      .spinner {
+        animation: spin 0.6s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </body>
+</html>
